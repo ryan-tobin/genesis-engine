@@ -257,6 +257,50 @@ void World::render(sf::RenderWindow &window)
     window.draw(vertices);
 }
 
+void World::renderHeightmap(sf::RenderWindow &window)
+{
+    // Render as grayscale heightmap
+    sf::VertexArray vertices(sf::PrimitiveType::Triangles, width * height * 6);
+
+    for (int y = 0; y < height; y++)
+    {
+        for (int x = 0; x < width; x++)
+        {
+            int index = (y * width + x) * 6;
+
+            // Define quad corners
+            float left = x * tileSize;
+            float top = y * tileSize;
+            float right = left + tileSize;
+            float bottom = top + tileSize;
+
+            // Convert elevation to grayscale (0-255)
+            float elevation = elevationMap[y][x];
+            int gray = (int)((elevation + 1.0f) * 0.5f * 255.0f);
+            gray = std::max(0, std::min(255, gray));
+
+            sf::Color color(gray, gray, gray);
+
+            // Create two triangles for the quad
+            vertices[index + 0].position = sf::Vector2f(left, top);
+            vertices[index + 1].position = sf::Vector2f(right, top);
+            vertices[index + 2].position = sf::Vector2f(left, bottom);
+
+            vertices[index + 3].position = sf::Vector2f(right, top);
+            vertices[index + 4].position = sf::Vector2f(right, bottom);
+            vertices[index + 5].position = sf::Vector2f(left, bottom);
+
+            // Set colors
+            for (int i = 0; i < 6; i++)
+            {
+                vertices[index + i].color = color;
+            }
+        }
+    }
+
+    window.draw(vertices);
+}
+
 float World::getElevation(int x, int y) const
 {
     if (x >= 0 && x < width && y >= 0 && y < height)
@@ -273,4 +317,43 @@ TerrainType World::getTerrain(int x, int y) const
         return terrainTypes[y][x];
     }
     return TerrainType::DEEP_WATER; // Out of bounds
+}
+
+void World::modifyElevation(int x, int y, float delta)
+{
+    if (x >= 0 && x < width && y >= 0 && y < height)
+    {
+        elevationMap[y][x] += delta;
+        // Keep elevation in reasonable bounds
+        elevationMap[y][x] = std::max(-1.0f, std::min(1.0f, elevationMap[y][x]));
+    }
+}
+
+void World::normalizeElevation()
+{
+    // Find min and max elevation
+    float minElev = elevationMap[0][0];
+    float maxElev = elevationMap[0][0];
+
+    for (int y = 0; y < height; y++)
+    {
+        for (int x = 0; x < width; x++)
+        {
+            minElev = std::min(minElev, elevationMap[y][x]);
+            maxElev = std::max(maxElev, elevationMap[y][x]);
+        }
+    }
+
+    // Normalize to [-1, 1] range
+    float range = maxElev - minElev;
+    if (range > 0)
+    {
+        for (int y = 0; y < height; y++)
+        {
+            for (int x = 0; x < width; x++)
+            {
+                elevationMap[y][x] = ((elevationMap[y][x] - minElev) / range) * 2.0f - 1.0f;
+            }
+        }
+    }
 }

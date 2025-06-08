@@ -93,6 +93,7 @@ public:
     void generateNoiseMap();
     void assignTerrainTypes();
     void render(sf::RenderWindow &window);
+    void renderHeightmap(sf::RenderWindow &window);
     void setIslandMode(IslandMode mode) { islandMode = mode; }
 
     // Getters
@@ -100,4 +101,8 @@ public:
     int getHeight() const { return height; }
     float getElevation(int x, int y) const;
     TerrainType getTerrain(int x, int y) const;
+
+    // Modifiers for erosion
+    void modifyElevation(int x, int y, float delta);
+    void normalizeElevation();
 };

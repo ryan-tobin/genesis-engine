@@ -1,9 +1,11 @@
+// Apply erosion
 #include <SFML/Graphics.hpp>
 #include <optional>
 #include <iostream>
 #include <chrono>
 #include <algorithm>
 #include "World.h"
+#include "Erosion.h"
 
 int main()
 {
@@ -12,9 +14,9 @@ int main()
     const unsigned int windowHeight = 800;
 
     // World settings - Larger world with smaller tiles for more detail
-    const int worldWidth = 300;
-    const int worldHeight = 200;
-    const int tileSize = 12;
+    const int worldWidth = 300;  // Increased from 150
+    const int worldHeight = 200; // Increased from 100
+    const int tileSize = 4;      // Decreased from 8 for more detail
 
     // Create window
     sf::RenderWindow window(sf::VideoMode({windowWidth, windowHeight}), "Genesis Engine - Phase 1: Terrain Generation");
@@ -33,10 +35,15 @@ int main()
     std::cout << "  Mouse Wheel - Zoom in/out" << std::endl;
     std::cout << "  R - Regenerate world with single island" << std::endl;
     std::cout << "  T - Generate archipelago (multiple islands)" << std::endl;
+    std::cout << "  E - Apply erosion simulation" << std::endl;
+    std::cout << "  H - Toggle heightmap view" << std::endl;
     std::cout << "  Space - Reset camera view" << std::endl;
     world.generateNoiseMap();
     world.assignTerrainTypes();
     std::cout << "World generation complete!" << std::endl;
+
+    // Create erosion simulator
+    ErosionSimulator erosion(seed);
 
     // Create view for camera control
     sf::View view;
@@ -52,6 +59,9 @@ int main()
     const float minZoom = 0.1f;
     const float maxZoom = 5.0f;
     float currentZoom = 1.0f;
+
+    // Visualization mode
+    bool showHeightmap = false;
 
     while (window.isOpen())
     {
@@ -93,6 +103,13 @@ int main()
                     world.generateNoiseMap();
                     world.assignTerrainTypes();
                     std::cout << "World regeneration complete!" << std::endl;
+                }
+                // Apply erosion
+                else if (keyEvent->code == sf::Keyboard::Key::E)
+                {
+                    std::cout << "Applying hydraulic erosion..." << std::endl;
+                    erosion.erode(world, 200000);
+                    std::cout << "Erosion complete! Rivers and valleys have been carved." << std::endl;
                 }
                 // Reset camera
                 else if (keyEvent->code == sf::Keyboard::Key::Space)
@@ -158,7 +175,14 @@ int main()
 
         // Render
         window.clear(sf::Color::Black);
-        world.render(window);
+        if (showHeightmap)
+        {
+            world.renderHeightmap(window);
+        }
+        else
+        {
+            world.render(window);
+        }
 
         // Draw UI instructions
         window.setView(window.getDefaultView());
@@ -169,10 +193,10 @@ int main()
         sf::Font font;
         if (font.openFromFile("arial.ttf"))
         {
-            sf::Text instructions(font, "Controls: WASD/Arrows - Move | Mouse Wheel - Zoom | R - Regenerate | Space - Reset View", 14);
-            instructions.setFillColor(sf::Color::White);
-            instructions.setPosition(sf::Vector2f(10, 10));
-            window.draw(instructions);
+        sf::Text instructions(font, "Controls: WASD/Arrows - Move | Mouse Wheel - Zoom | R - Regenerate | Space - Reset View", 14);
+        instructions.setFillColor(sf::Color::White);
+        instructions.setPosition(sf::Vector2f(10, 10));
+        window.draw(instructions);
         }
         */
 
