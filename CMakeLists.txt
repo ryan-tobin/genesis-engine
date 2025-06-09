@@ -18,6 +18,10 @@ add_executable(GenesisEngine
     src/World.h
     src/Erosion.cpp
     src/Erosion.h
+    src/Climate.cpp
+    src/Climate.h
+    src/Civilization.h 
+    src/Civilization.cpp
 )
 
 # Link SFML to our executable - SFML 3.0 uses SFML:: namespace
